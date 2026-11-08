@@ -152,7 +152,6 @@ Licensed under either of
 
 at your option.
 
-
 [Helix]: https://helix-editor.com/
 [Helix expansions]: https://docs.helix-editor.com/command-line.html#expansions
 [nextest]: https://nexte.st

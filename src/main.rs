@@ -22,10 +22,14 @@
 
 use std::path::PathBuf;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::{Parser, ValueEnum};
 
-use crate::commands::{command_for_mode, helix::HelixVariables};
+use crate::{
+    commands::{command_for_mode, helix::HelixVariables},
+    config::HemuxConfig,
+};
+pub use config::CONF;
 
 mod commands;
 mod config;
@@ -69,11 +73,14 @@ struct Cli {
     language: String,
 }
 fn main() -> Result<()> {
-    let args = Cli::parse();
-
     // load and set the config
+    let hemux_config: HemuxConfig = confy::load("hemux", Some("config"))
+        .with_context(|| "Cannot acces the hemux configuration file.")?;
+    CONF.set(hemux_config)
+        .expect("first initialization of config; please file a bug report");
     config::init_config()?;
 
+    let args = Cli::parse();
     // Verify we are in a tmux session.
     tmux::verify_inside_tmux()?;
 

@@ -3,10 +3,18 @@
 use std::{collections::HashMap, sync::OnceLock};
 
 use anyhow::{Result, anyhow};
+use serde::{Deserialize, Serialize};
 
-use crate::commands::schema::TestRunnerSchema;
+use crate::{commands::schema::TestRunnerSchema, tmux::TmuxConfig};
 
+pub static CONF: OnceLock<HemuxConfig> = OnceLock::new();
 pub static TEST_RUNNERS: OnceLock<HashMap<String, TestRunnerSchema>> = OnceLock::new();
+
+/// Hemux program configuration.
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct HemuxConfig {
+    pub tmux_config: TmuxConfig,
+}
 
 /// Initialize the public configuration.
 ///
