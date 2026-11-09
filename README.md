@@ -52,7 +52,96 @@ This will give the following shortcuts (where the comma means "followed by"):
 - `Space, t, f`: Run all tests in the current file
 - `Space, t, n`: Run the nearest test
 
-## Limitations
+## Configuration
+
+When you first run hemux (e.g., with `hemux -h`),
+it runs with its default configuration.
+The default configuration is automatically written to a `hemux/config.toml` file
+in the OS specific configuration folder.
+On Linux this would be in `$HOME/.config/hemux/config.toml`.
+
+The default configuration file at the moment looks like this:
+
+```toml
+[tmux_config]
+split_direction = "Vertical"
+split_percentage = 20
+
+[test_runners.rust]
+test_suite = "cargo test"
+test_file = "cargo test %{file_name_no_suffix}"
+test_nearest = "cargo test %{function_name}"
+regex_nearest = '(?:.*\s+|^)fn\s+([A-Za-z_][A-Za-z0-9_]*)' 
+```
+
+### Tmux configuration
+
+- `split_direction`: Valid values are "Vertical" or "Horizontal".
+- `split_percentage`: hemux will clamp this value between 5 and 95.
+
+### Test runners
+
+You can specify as many test runners as you like.
+The imporant thing is that the language that helix passes to hemux
+via the `-l` flag
+must be identical to the name of this test runner,
+e.g., `[test_runner.rust]` as above for "rust" files.
+
+The next three commands are:
+
+- `test_suite`: The command to run for running the whole test suite.
+- `test_file`: The command to run for running the tests in one specific file.
+- `test_nearest`: The command to run for running a test by a search pattern
+  upward from the current cursor.
+  See below for more detail.
+
+In these commands, you can use the following variables:
+
+- `%{file_name}`: Filename only.
+- `%{file_name_no_suffix}`: Filename stem, no extension.
+- `%{file_path}`: Relative path of the file and filename.
+- `%{file_path_no_suffix}`: Relative path of the file and filename without extension.
+- `%{function_name}`: Name of the nearest function as found by matching
+  the given regex pattern from cursor line up.
+- `%{cursor_line}`: The line number the cursor is at when called.
+
+If you are using cargo [nextest],
+which in my opinion is much more suited for this kind of testing
+as its output displays very nicely in a limited height pane,
+you can just do the following replacement in the rust testrunner:
+
+`cargo test` -> `cargo nextest run`
+
+### Regex pattern
+
+To find the function name, we start scanning the line the cursor is currently on.
+If the regex pattern matches, we have found the line.
+The regex pattern itself must select the function name that we want to pass
+to the `%{function_name}` variable as the first and only matching group.
+
+Let us for example analyze the above regex pattern:
+`(?:.*\s+|^)fn\s+([A-Za-z_][A-Za-z0-9_]*) `
+
+- The first group `(?:.*]s+|^)` is not returned (`?:`).
+  We then allow any character(s) followed by at least one space
+  or the following has to be the start of the line.
+- Then comes the keyword `fn` that we are looking for
+  followed by at least one space.
+- Then comes the matching group that we do want to return:
+  It must start with one letter (capitalized or not),
+  followed by zero or more letters (any case) or numbers.
+
+Does the pattern capture everything?
+Probably not.
+If you want to make it better, you can configure it better now for your own hemux.
+Please also raise an issue, I'd be happy to improve the default pattern.
+
+To test out regex pattern on multiple lines,
+the [Regular Expressions 101] website has been very useful for me.
+
+## Limitations 
+
+### Rust test runners
 
 - Running a whole file test: We basically just provide `cargo t filename`,
   where the `filename` contains no extension.
@@ -62,7 +151,7 @@ This will give the following shortcuts (where the comma means "followed by"):
   so if some other module contains the name of this file
   and/or a test name contains the name of this file,
   it will run too.
-- Running nearest test just looks for above the current cursor
+- Running nearest test just looks above the current cursor
   for a function name. If a function name is encountered
   but it is not the function name of the test that is nearest,
   `cargo t function_name` will probably not find your test.
@@ -72,11 +161,8 @@ This will give the following shortcuts (where the comma means "followed by"):
 
 ## What is to come
 
-- Support to specify your own comments and run in tmux panes.
+- Support to specify your own commands and run in tmux panes.
 - Python support.
-- Configuration files so you can tweak hemux to your configuration.
-- Support for [nextest].
-- Configurations for test runners (maybe).
 
 ## What is outside the scope of this project
 
@@ -155,5 +241,6 @@ at your option.
 [Helix]: https://helix-editor.com/
 [Helix expansions]: https://docs.helix-editor.com/command-line.html#expansions
 [nextest]: https://nexte.st
+[Regular Expressions 101]: https://regex101.com/
 [tmux]: https://tmux.app/
 [vimux]: https://github.com/preservim/vimux

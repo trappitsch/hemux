@@ -2,8 +2,8 @@
 //!
 //! TODO:
 //!
+//! - Move test runners into config such that are in the TOML file.
 //! - Fix help documentation such that it is nicely displayed and useful.
-//! - Add support to select test runner, add Nextest for rust.
 //! - Add support for user commands depending on language.
 //! - Add python support.
 //!
@@ -11,8 +11,11 @@
 //!
 //! - Running test suite in Rust works fine.
 //! - Running test file works meh: tests in `lib`, `main` will not work
+//!   - I can live with that: for big codebases, `lib` and `main` usually do not hold tests.
 //! - Running nearest test: Just searches for the function name, no module name currently.
+//!   - I can live with that, Even if it catches two, whatever.
 //! - Add a "run nearest module" as an alternative? Very rust centric.
+//!   - Maybe in combination with file name?
 //!
 //! NOTE:
 //!
@@ -22,14 +25,11 @@
 
 use std::path::PathBuf;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::{Parser, ValueEnum};
 
-use crate::{
-    commands::{command_for_mode, helix::HelixVariables},
-    config::HemuxConfig,
-};
-pub use config::CONF;
+use crate::commands::{command_for_mode, helix::HelixVariables};
+pub use config::CONFIG;
 
 mod commands;
 mod config;
@@ -73,21 +73,16 @@ struct Cli {
     language: String,
 }
 fn main() -> Result<()> {
-    // load and set the config
-    let hemux_config: HemuxConfig = confy::load("hemux", Some("config"))
-        .with_context(|| "Cannot acces the hemux configuration file.")?;
-    CONF.set(hemux_config)
-        .expect("first initialization of config; please file a bug report");
+    // setup of program
     config::init_config()?;
-
     let args = Cli::parse();
-    // Verify we are in a tmux session.
+
+    // preparation and putting command together.
     tmux::verify_inside_tmux()?;
-
     let helix_variables = HelixVariables::new(args.path, args.language, args.cursor_line);
-
     let mut cmd_to_run = command_for_mode(args.mode, helix_variables)?;
 
+    // run the command the user wants to be run.
     tmux::open_command_pane()?;
     cmd_to_run.output()?;
 

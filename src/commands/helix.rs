@@ -10,8 +10,8 @@ use anyhow::{Result, anyhow};
 use strum::IntoEnumIterator;
 
 use crate::{
+    CONFIG,
     commands::{regex_searches, schema::SchemaVariables},
-    config::TEST_RUNNERS,
 };
 
 /// Helix variables.
@@ -131,17 +131,18 @@ impl HelixVariables {
 
         // get at the Regex value.
         // FIXME: This should be done somewhere else, i.e., some module for test runners access!
-        let test_runners = TEST_RUNNERS
+        let test_runners = &CONFIG
             .get()
-            .ok_or(anyhow!("Config not initialized: report as bug."))?;
+            .expect("config is initialized by now")
+            .test_runners;
         let schema = test_runners.get(self.get_lang()).ok_or(anyhow!(
             "Could not find test runner for language: {}",
             self.get_lang()
         ))?;
-        let pattern = schema.get_regex_function_name()?;
+        let pattern = schema.get_regex_nearest()?;
 
         regex_searches::find_nearest_function_name(
-            &file_path,
+            file_path,
             &pattern,
             self.get_cursor_line_usize()?,
         )

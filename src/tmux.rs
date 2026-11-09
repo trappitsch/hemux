@@ -5,7 +5,7 @@ use std::process::Command;
 use anyhow::{Context, Result, anyhow};
 use serde::{Deserialize, Serialize};
 
-use crate::CONF;
+use crate::CONFIG;
 
 /// The Tmux configuration.
 #[derive(Debug, Serialize, Deserialize)]
@@ -20,7 +20,7 @@ impl Default for TmuxConfig {
     fn default() -> Self {
         Self {
             split_direction: Default::default(),
-            split_percentage: 30,
+            split_percentage: 20,
         }
     }
 }
@@ -64,7 +64,7 @@ pub fn verify_inside_tmux() -> Result<()> {
 /// This checks if multiple panes are already open. If not, a horizontal split
 /// is done with the bottom pane of 25% the height of the top one.
 pub fn open_command_pane() -> Result<()> {
-    let conf = CONF
+    let conf = CONFIG
         .get()
         .expect("config file loading initialized at beginning");
 
