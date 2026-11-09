@@ -1,13 +1,14 @@
 //! Library with all the testrunners we know and can configure.
 
 use anyhow::{Result, anyhow};
+use serde::{Deserialize, Serialize};
 use strum_macros::EnumIter;
 
 /// This is the structure we need for a test runner.
 ///
 /// All possibilities are optional as not every test runner might have all the individual possibilities.
 /// For each command, you can use the abreviations documented in [`SchemaVariables`].
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TestRunnerSchema {
     /// Command to run the whole test suite.
     pub test_suite: Option<String>,
@@ -15,8 +16,8 @@ pub struct TestRunnerSchema {
     pub test_file: Option<String>,
     /// Command to run a signle test.
     pub test_nearest: Option<String>,
-    /// Regex pattern to find extract the function name when searching backwards from the current cursor.
-    pub regex_function_name: Option<String>,
+    /// Regex pattern for extracting nearest function name in match group in a line search.
+    pub regex_nearest: Option<String>,
 }
 
 impl TestRunnerSchema {
@@ -42,8 +43,8 @@ impl TestRunnerSchema {
     }
 
     /// Get the regex command to find the nearest function, return error if it does not exist.
-    pub fn get_regex_function_name(&self) -> Result<String> {
-        self.regex_function_name
+    pub fn get_regex_nearest(&self) -> Result<String> {
+        self.regex_nearest
             .clone()
             .ok_or(anyhow!("Regex pattern to find nearest function not set."))
     }
@@ -63,7 +64,7 @@ pub enum SchemaVariables {
     FilePath,
     /// `%{file_path_no_suffix}`: Relative path of the file and filename without extension.
     FilePathNoSuffix,
-    /// `%{function_name}`: Name of the nearest function as found by matchin regex pattern from cursor line up.
+    /// `%{function_name}`: Name of the nearest function as found by matching the given regex pattern from cursor line up.
     FunctionName,
     /// `%{cursor_line}`: The line number the cursor is at when called.
     CursorLine,
