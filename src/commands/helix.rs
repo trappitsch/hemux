@@ -7,6 +7,7 @@
 use std::path::PathBuf;
 
 use anyhow::{Result, anyhow};
+use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 
 use crate::{
@@ -17,6 +18,7 @@ use crate::{
 /// Helix variables.
 ///
 /// A general struct of all the helix variables that we want to use.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HelixVariables {
     /// The file path, if given.
     file_path: Option<PathBuf>,

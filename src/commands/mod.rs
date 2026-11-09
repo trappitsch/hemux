@@ -5,20 +5,23 @@ use std::process::Command;
 use anyhow::{Result, anyhow};
 
 use crate::CONFIG;
+use crate::commands::last_cmd::get_last_command;
 use crate::{
     Mode,
     commands::{helix::HelixVariables, schema::TestRunnerSchema},
 };
 
 pub mod helix;
+pub mod last_cmd;
 pub mod regex_searches;
 pub mod schema;
 
 /// Create the command from the mode we are currently in.
-pub fn command_for_mode(mode: Mode, helix_variables: HelixVariables) -> Result<Command> {
+pub fn command_for_mode(mode: &Mode, helix_variables: &HelixVariables) -> Result<Command> {
     let schema = get_test_runner_schema(helix_variables.get_lang())?;
 
     let cmd_str = match mode {
+        Mode::Last => return get_last_command(), // Last cmd includes tmux handling.
         Mode::TestSuite => helix_variables.make_command_argument(&schema.get_test_suite()?)?,
         Mode::TestFile => helix_variables.make_command_argument(&schema.get_test_file()?)?,
         Mode::TestNearest => helix_variables.make_command_argument(&schema.get_test_nearest()?)?,

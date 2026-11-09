@@ -22,6 +22,7 @@ What tests are you able to run?
 - The nearest tests to your current cursor location.
 - All the tests in the file that you are currently in.
 - The whole test suite.
+- Re-run the last command.
 
 ## Installation and setup
 
@@ -44,6 +45,7 @@ Add the following keymapping to your `~/.config/helix/config.toml` file:
 s = ":sh hemux -m=test-suite -l=%{language} -p=%{buffer_name} -c=%{cursor_line}"  # Run test suite
 f = ":sh hemux -m=test-file -l=%{language} -p=%{buffer_name} -c=%{cursor_line}"  # Run test in file
 n = ":sh hemux -m=test-nearest -l=%{language} -p=%{buffer_name} -c=%{cursor_line}"  # Run nearest test
+l = ":sh hemux -m=last"  # Re-run last run command
 ```
 
 This will give the following shortcuts (where the comma means "followed by"):
@@ -51,6 +53,7 @@ This will give the following shortcuts (where the comma means "followed by"):
 - `Space, t, s`: Run the whole test suite
 - `Space, t, f`: Run all tests in the current file
 - `Space, t, n`: Run the nearest test
+- `Space, t, l`: Run the last command again
 
 ## Configuration
 

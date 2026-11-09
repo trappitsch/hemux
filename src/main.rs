@@ -2,33 +2,17 @@
 //!
 //! TODO:
 //!
-//! - Move test runners into config such that are in the TOML file.
 //! - Fix help documentation such that it is nicely displayed and useful.
 //! - Add support for user commands depending on language.
 //! - Add python support.
-//!
-//! TODO: Running tests
-//!
-//! - Running test suite in Rust works fine.
-//! - Running test file works meh: tests in `lib`, `main` will not work
-//!   - I can live with that: for big codebases, `lib` and `main` usually do not hold tests.
-//! - Running nearest test: Just searches for the function name, no module name currently.
-//!   - I can live with that, Even if it catches two, whatever.
-//! - Add a "run nearest module" as an alternative? Very rust centric.
-//!   - Maybe in combination with file name?
-//!
-//! NOTE:
-//!
-//! - Buffer path contains `src` for Rust -> that's not really what we need for test
-//!   - Does it always contian that, is it always with respect to the WD?
-//! - The test runners will be highly language specific, probably not configuratble.
 
 use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::{Parser, ValueEnum};
+use serde::{Deserialize, Serialize};
 
-use crate::commands::{command_for_mode, helix::HelixVariables};
+use crate::commands::{command_for_mode, helix::HelixVariables, last_cmd::save_command_as_last};
 pub use config::CONFIG;
 
 mod commands;
@@ -36,8 +20,10 @@ mod config;
 mod tmux;
 
 /// The mode we might run the tests in.
-#[derive(Debug, Clone, ValueEnum)]
+#[derive(Debug, Clone, PartialEq, Eq, ValueEnum, Serialize, Deserialize)]
 pub enum Mode {
+    /// Run the last test or command.
+    Last,
     /// Test a single file.
     TestFile,
     /// Test the nearest test.
@@ -54,6 +40,7 @@ pub enum Mode {
 /// If not provided, the language defaults to "rust".
 ///
 /// Various modes required various attributes to be provided:
+/// - last:         No other attributes required, but `$HEMUX_LAST_CMD` must be set.
 /// - test-file:    Requires that -p/--path is provided.
 /// - test-nearest: Requires that -p/--path and -r/--row is provided.
 /// - test-suite:   Only requires the mandatory arguments.
@@ -80,11 +67,15 @@ fn main() -> Result<()> {
     // preparation and putting command together.
     tmux::verify_inside_tmux()?;
     let helix_variables = HelixVariables::new(args.path, args.language, args.cursor_line);
-    let mut cmd_to_run = command_for_mode(args.mode, helix_variables)?;
+    let mut cmd_to_run = command_for_mode(&args.mode, &helix_variables)?;
 
     // run the command the user wants to be run.
     tmux::open_command_pane()?;
     cmd_to_run.output()?;
+
+    if let Err(e) = save_command_as_last(args.mode, helix_variables) {
+        eprintln!("Warning - Could not save last command: {e}");
+    };
 
     Ok(())
 }
