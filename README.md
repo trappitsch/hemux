@@ -42,10 +42,10 @@ Add the following keymapping to your `~/.config/helix/config.toml` file:
 
 ```toml
 [keys.normal.space.t]  # hemux key bindings
-s = ":sh hemux -m=test-suite -l=%{language} -p=%{buffer_name} -c=%{cursor_line}"  # Run test suite
-f = ":sh hemux -m=test-file -l=%{language} -p=%{buffer_name} -c=%{cursor_line}"  # Run test in file
-n = ":sh hemux -m=test-nearest -l=%{language} -p=%{buffer_name} -c=%{cursor_line}"  # Run nearest test
-l = ":sh hemux -m=last"  # Re-run last run command
+s = ":sh hemux test-suite -l=%{language} -p=%{buffer_name} -c=%{cursor_line}"  # Run test suite
+f = ":sh hemux test-file -l=%{language} -p=%{buffer_name} -c=%{cursor_line}"  # Run test in file
+n = ":sh hemux test-nearest -l=%{language} -p=%{buffer_name} -c=%{cursor_line}"  # Run nearest test
+l = ":sh hemux last"  # Run last run command
 ```
 
 This will give the following shortcuts (where the comma means "followed by"):
@@ -169,7 +169,7 @@ the [Regular Expressions 101] website has been very useful for me.
 
 ## What is outside the scope of this project
 
-- Making this blazingly fast.
+- Making this blazingly fast (it is fast enough, it's Rust after all).
 - Catching every eventuality and always only running the intended test.
 
 Note: While a non-goal is to always run only the intended test,
@@ -192,23 +192,9 @@ Specifically, hemux uses the following:
 Note: If you get these values out of any other editor,
 you probably can use hemux as well.
 
-### What test runners are currently supported?
-
-- Rust: `cargo test`
-- Python: `pytest`
-
-### Configuration
-
-None at first possible, but ultimately hemux might be able to be configuratble
-from a toml file.
-
-### What langugaes are supported?
-
-Rust and Python.
-
 ## Is this for me?
 
-Probably not, unless you actually have the same use case as I do and the same workflow
+Maybe, assuming you actually have the same use case as I do, the same workflow,
 and/or if you are willing to tinker with the program.
 
 ## Should I bank on this project to be maintained for a long time?

@@ -1,4 +1,4 @@
-//! Deal with helix related things, like variables.
+//! Deals with the arguments that are specifically passed form helix.
 //!
 //! TODO:
 //! - The language can actually serve to get the regex stuff from the test runner and extract the function name.
@@ -7,6 +7,7 @@
 use std::path::PathBuf;
 
 use anyhow::{Result, anyhow};
+use clap::Args;
 use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 
@@ -15,24 +16,35 @@ use crate::{
     commands::{regex_searches, schema::SchemaVariables},
 };
 
-/// Helix variables.
-///
-/// A general struct of all the helix variables that we want to use.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HelixVariables {
-    /// The file path, if given.
-    file_path: Option<PathBuf>,
-    /// The language, if given.
+/// The infromation we can want to get form Helix.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Args)]
+pub struct HelixArgs {
+    /// Path to the file in which the test(s) are that you are interested.
+    #[arg(short, long)]
+    path: Option<PathBuf>,
+    /// Language the current file is in, used to select the runner.
+    #[arg(short, long, default_value = "rust")]
     language: String,
-    /// The cursor line, if given.
+    /// Line number from where to start searching the nearest test.
+    #[arg(short, long)]
     cursor_line: Option<usize>,
 }
 
-impl HelixVariables {
-    /// Create a new HelixVariables path from the input arguments.
-    pub fn new(file_path: Option<PathBuf>, language: String, cursor_line: Option<usize>) -> Self {
+impl Default for HelixArgs {
+    fn default() -> Self {
         Self {
-            file_path,
+            path: Default::default(),
+            language: "rust".to_string(),
+            cursor_line: Default::default(),
+        }
+    }
+}
+
+impl HelixArgs {
+    /// Create a new HelixArgs path from the input arguments.
+    pub fn new(path: Option<PathBuf>, language: String, cursor_line: Option<usize>) -> Self {
+        Self {
+            path,
             language,
             cursor_line,
         }
@@ -81,7 +93,7 @@ impl HelixVariables {
     /// - File path is not set.
     /// - File name contains invalid UTF-8 characters.
     fn get_file_name(&self, with_suffix: bool) -> Result<String> {
-        let pth = self.file_path.as_ref().ok_or(anyhow!(
+        let pth = self.path.as_ref().ok_or(anyhow!(
             "The path to the file of interest must be given with the -p/--path argument."
         ))?;
 
@@ -109,7 +121,7 @@ impl HelixVariables {
     /// - File path is not set.
     /// - File path contains invalid UTF-8 characters.
     fn get_file_path(&self, with_suffix: bool) -> Result<String> {
-        let mut pth = self.file_path.clone().ok_or(anyhow!(
+        let mut pth = self.path.clone().ok_or(anyhow!(
             "The path to the file of interest must be given with the -p/--path argument."
         ))?;
 
@@ -127,7 +139,7 @@ impl HelixVariables {
 
     /// Get the function name of the nearest function (above current cursor line).
     fn get_function_name(&self) -> Result<String> {
-        let file_path = self.file_path.as_ref().ok_or(anyhow!(
+        let file_path = self.path.as_ref().ok_or(anyhow!(
             "The path to the file of interest must be given with the -p/--path argument.",
         ))?;
 
