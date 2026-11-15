@@ -3,7 +3,6 @@
 //! TODO:
 //!
 //! - Fix help documentation such that it is nicely displayed and useful.
-//! - Add support for user commands depending on language.
 //! - Add python support.
 
 use anyhow::{Result, bail};
@@ -12,7 +11,9 @@ use serde::{Deserialize, Serialize};
 
 pub use config::CONFIG;
 
-use crate::commands::{create_command, helix::HelixArgs, last_cmd::save_command_as_last};
+use crate::commands::{
+    create_command, helix::HelixArgs, last_cmd::save_command_as_last, shell_cmd::CmdArgs,
+};
 
 mod commands;
 mod config;
@@ -21,6 +22,8 @@ mod tmux;
 /// The hemux command that can be run.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Subcommand)]
 pub enum HemuxCommand {
+    /// Run a simple command that is not language specific.
+    Cmd(CmdArgs),
     /// Run the whole test suite (default).
     TestSuite(HelixArgs),
     /// Test a single file.

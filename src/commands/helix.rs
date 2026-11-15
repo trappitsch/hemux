@@ -2,7 +2,6 @@
 //!
 //! TODO:
 //! - The language can actually serve to get the regex stuff from the test runner and extract the function name.
-//! - Useful error messages when something fails, we propagate these up!
 
 use std::path::PathBuf;
 
@@ -13,7 +12,10 @@ use strum::IntoEnumIterator;
 
 use crate::{
     CONFIG,
-    commands::{regex_searches, schema::SchemaVariables},
+    commands::{
+        regex_searches,
+        schema::{SchemaVariables, TestRunnerSchema},
+    },
 };
 
 /// The infromation we can want to get form Helix.
@@ -186,5 +188,19 @@ impl HelixArgs {
             "Cursor line must be provided with -c/--cursor-line argument."
         ))?;
         Ok(cursor_line)
+    }
+
+    pub fn get_test_runner_schema(&self) -> Result<&TestRunnerSchema> {
+        let test_runners = &CONFIG
+            .get()
+            .expect("config is initialized by now")
+            .test_runners;
+
+        test_runners
+            .get(&self.language.to_lowercase())
+            .ok_or(anyhow!(
+                "Could not find test runner for language: {}",
+                self.language
+            ))
     }
 }

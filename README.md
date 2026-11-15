@@ -41,19 +41,38 @@ OR
 Add the following keymapping to your `~/.config/helix/config.toml` file:
 
 ```toml
-[keys.normal.space.t]  # hemux key bindings
+[keys.normal.'\']
+i = ":sh hemux cmd -n=info -a -l=%{language} -p=%{buffer_name} -c=%{cursor_line}"  # language agnostic info command.
+l = ":sh hemux last"  # Run last run command
+
+[keys.normal.'\'.r]
+r = ":sh hemux cmd -n='run' -l=%{language}"  # language specific run command
+R = ":sh hemux cmd -n='run-alt' -l=%{language}"  # language specific run-alt command
+b = ":sh hemux cmd -n='build' -l=%{language}"  # language specific build command
+B = ":sh hemux cmd -n='build-alt' -l=%{language}"  # language specific buld-alt command
+
+[keys.normal.'\'.t]
 s = ":sh hemux test-suite -l=%{language} -p=%{buffer_name} -c=%{cursor_line}"  # Run test suite
 f = ":sh hemux test-file -l=%{language} -p=%{buffer_name} -c=%{cursor_line}"  # Run test in file
 n = ":sh hemux test-nearest -l=%{language} -p=%{buffer_name} -c=%{cursor_line}"  # Run nearest test
-l = ":sh hemux last"  # Run last run command
 ```
 
 This will give the following shortcuts (where the comma means "followed by"):
 
-- `Space, t, s`: Run the whole test suite
-- `Space, t, f`: Run all tests in the current file
-- `Space, t, n`: Run the nearest test
-- `Space, t, l`: Run the last command again
+- `\, i`: Run a language agnostic information comand
+  to print some variables we can use in commands (see below).
+- `\, l`: Run the last command again
+- `\, r, r`: Run a language specific command name `run`.
+- `\, r, R`: Run a language specific command name `run-alt`.
+- `\, r, b`: Run a language specific command name `build`.
+- `\, r, B`: Run a language specific command name `build`.
+- `\, t, s`: Run the whole test suite
+- `\, t, f`: Run all tests in the current file
+- `\, t, n`: Run the nearest test
+
+Here we use `\` as a new menu, like `Space`.
+If you are coming from neovim, this would be similar to the local leader
+(or hemux leader ;)).
 
 ## Configuration
 
@@ -71,10 +90,25 @@ split_direction = "Vertical"
 split_percentage = 20
 
 [test_runners.rust]
-test_suite = "cargo test"
-test_file = "cargo test %{file_name_no_suffix}"
-test_nearest = "cargo test %{function_name}"
-regex_nearest = '(?:.*\s+|^)fn\s+([A-Za-z_][A-Za-z0-9_]*)' 
+test_suite = "cargo nextest run"
+test_file = "cargo nextest run %{file_name_no_suffix}"
+test_nearest = "cargo nextest run %{function_name}"
+regex_nearest = '(?:.*\s+|^)fn\s+([A-Za-z_][A-Za-z0-9_]*)'
+
+[command_any_lang.info]
+command = "echo file_name: %{file_name} ; echo file_path: %{file_path} ; echo cursor_line: %{cursor_line}"
+
+[command.rust.run-alt]
+command = "cargo run -r"
+
+[command.rust.build-alt]
+command = "cargo build -r"
+
+[command.rust.build]
+command = "cargo build"
+
+[command.rust.run]
+command = "cargo run"
 ```
 
 ### Tmux configuration
@@ -108,12 +142,12 @@ In these commands, you can use the following variables:
   the given regex pattern from cursor line up.
 - `%{cursor_line}`: The line number the cursor is at when called.
 
-If you are using cargo [nextest],
+The test runners default to [nextest],
 which in my opinion is much more suited for this kind of testing
-as its output displays very nicely in a limited height pane,
-you can just do the following replacement in the rust testrunner:
+as its output displays very nicely in a limited height pane.
+If you prefer `cargo test`, you could do the following replacement:
 
-`cargo test` -> `cargo nextest run`
+`cargo nextest run` -> `cargo test`
 
 ### Regex pattern
 
@@ -142,7 +176,39 @@ Please also raise an issue, I'd be happy to improve the default pattern.
 To test out regex pattern on multiple lines,
 the [Regular Expressions 101] website has been very useful for me.
 
-## Limitations 
+### Language agnostic commands
+
+The section `[command_any_lang.info]`
+defines a command named "info",
+which does not depend on a given file's language from which it is run.
+It is thus a language agnostic command.
+Here, it would print out some helix variables.
+
+### Language specific commands
+
+This is a little bit like filetype specific commands.
+We define four commands: "run", "run-alt", "build", and "build-alt".
+These are defined for rust for now as:
+
+```toml
+[command.rust.run]
+command = "cargo run"
+```
+
+We build the command by specificing `command`,
+followed by the language (in the spelling that Helix provides),
+followed by the name of the comman (here `run`).
+Then the command is provided.
+This can now be run from within helix as:
+
+```shell
+:sh hemux cmd -n='run' -l=%{language}
+```
+
+Here, we would simply run in shell (`:sh`)
+the command named `run` with a given language specifier.
+
+## Limitations
 
 ### Rust test runners
 

@@ -4,6 +4,20 @@ use anyhow::{Result, anyhow};
 use serde::{Deserialize, Serialize};
 use strum_macros::EnumIter;
 
+/// This is the structure we need for a command runner.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CommandRunnerSchema {
+    pub command: String,
+}
+
+impl CommandRunnerSchema {
+    pub fn new(command: &str) -> Self {
+        Self {
+            command: command.to_string(),
+        }
+    }
+}
+
 /// This is the structure we need for a test runner.
 ///
 /// All possibilities are optional as not every test runner might have all the individual possibilities.
